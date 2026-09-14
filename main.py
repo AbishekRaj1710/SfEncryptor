@@ -18,8 +18,8 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication, QSplashScreen
+from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtCore import Qt
 
 from ui.main_window import MainWindow
@@ -42,6 +42,26 @@ def main():
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
     app.setOrganizationName(DEVELOPER_NAME)
+
+    splash = None
+    welcome_path = os.path.join(PROJECT_ROOT, "assets", "Sf_encryptor_welcome.bmp")
+    if os.path.exists(welcome_path):
+        welcome_pixmap = QPixmap(welcome_path)
+        if not welcome_pixmap.isNull():
+            splash_pixmap = welcome_pixmap.scaled(
+                620,
+                360,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            splash = QSplashScreen(splash_pixmap, Qt.WindowType.WindowStaysOnTopHint)
+            splash.showMessage(
+                "Starting secure workspace...",
+                Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft,
+                Qt.GlobalColor.white,
+            )
+            splash.show()
+            app.processEvents()
     
     # Setup application directories and logging
     setup_directories()
@@ -65,6 +85,14 @@ def main():
         
         # Initialize plugin manager with settings
         plugin_manager = PluginManager(app_settings)
+
+        if splash:
+            splash.showMessage(
+                "Loading encryption plugins...",
+                Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft,
+                Qt.GlobalColor.white,
+            )
+            app.processEvents()
         
         # Create and show main window
         main_window = MainWindow(
@@ -75,6 +103,8 @@ def main():
         )
         
         main_window.show()
+        if splash:
+            splash.finish(main_window)
         
         logger.info("Application initialized successfully")
         
